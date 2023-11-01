@@ -1,0 +1,49 @@
+From 8ce68a519414df141e3de7432ab4d55564e933a0 Mon Sep 17 00:00:00 2001
+From: Philip Withnall <withnall@endlessm.com>
+Date: Fri, 4 Oct 2019 18:25:34 +0100
+Subject: [PATCH] =?UTF-8?q?gtklistbox:=20Only=20unparent=20header=20rows?=
+ =?UTF-8?q?=20if=20they=20haven=E2=80=99t=20been=20reused?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+It’s possible for code which uses a `GtkListBox` to reuse a single
+header row, and move it around between rows. For example, this might
+happen if the code has interactive widgets (like buttons) in the row,
+and doesn’t want to continually recreate them and reattach signals to
+them whenever the row headers change.
+
+Unfortunately, this was broken, as the old header widget was
+unconditionally unparented, even if it had just been set as the header
+for a different row in the same `GtkListBox`. This left it assigned as
+a child widget in the `GtkListBox` (so it was iterated over by
+`forall`), but without its parent widget set.
+
+Fix that by only unparenting the header if it hasn’t already been
+assigned as the parent of a different row.
+
+Signed-off-by: Philip Withnall <withnall@endlessm.com>
+---
+ gtk/gtklistbox.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/gtk/gtklistbox.c b/gtk/gtklistbox.c
+index 36f9ec5246..db3ec5cbb8 100644
+--- a/gtk/gtklistbox.c
++++ b/gtk/gtklistbox.c
+@@ -2426,8 +2426,11 @@ gtk_list_box_update_header (GtkListBox    *box,
+                                 priv->update_header_func_target);
+       if (old_header != ROW_PRIV (row)->header)
+         {
+-          if (old_header != NULL)
++          if (old_header != NULL &&
++              g_hash_table_lookup (priv->header_hash, old_header) == row)
+             {
++              /* Only unparent the @old_header if it hasn’t been re-used as the
++               * header for a different row. */
+               gtk_widget_unparent (old_header);
+               g_hash_table_remove (priv->header_hash, old_header);
+             }
+-- 
+2.18.2
+

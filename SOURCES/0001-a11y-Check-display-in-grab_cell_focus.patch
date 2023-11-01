@@ -1,0 +1,40 @@
+From e91197a37f6841ada71204cd41f7d0459adffd9a Mon Sep 17 00:00:00 2001
+From: Olivier Fourdan <ofourdan@redhat.com>
+Date: Mon, 17 Dec 2018 14:13:05 +0100
+Subject: [PATCH] a11y: Check display in `*grab_cell_focus()`
+
+Calling the accessibility function `grab_focus()` on a `GtkCell` under
+Wayland will cause the client to crash.
+
+This is another case of `gdk_x11_get_server_time()` being called
+regardless of the actual windowing backend used.
+
+Closes: https://gitlab.gnome.org/GNOME/gtk/issues/1507
+---
+ gtk/a11y/gtktreeviewaccessible.c | 9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
+
+diff --git a/gtk/a11y/gtktreeviewaccessible.c b/gtk/a11y/gtktreeviewaccessible.c
+index efb9c9bc53..eec4480f29 100644
+--- a/gtk/a11y/gtktreeviewaccessible.c
++++ b/gtk/a11y/gtktreeviewaccessible.c
+@@ -1174,11 +1174,12 @@ gtk_tree_view_accessible_grab_cell_focus (GtkCellAccessibleParent *parent,
+       if (gtk_widget_is_toplevel (toplevel))
+         {
+ #ifdef GDK_WINDOWING_X11
+-          gtk_window_present_with_time (GTK_WINDOW (toplevel),
+-                                        gdk_x11_get_server_time (gtk_widget_get_window (widget)));
+-#else
+-          gtk_window_present (GTK_WINDOW (toplevel));
++          if (GDK_IS_X11_DISPLAY (gtk_widget_get_display (toplevel)))
++            gtk_window_present_with_time (GTK_WINDOW (toplevel),
++                                          gdk_x11_get_server_time (gtk_widget_get_window (widget)));
++          else
+ #endif
++            gtk_window_present (GTK_WINDOW (toplevel));
+         }
+ 
+       return TRUE;
+-- 
+2.20.1
+

@@ -1,0 +1,41 @@
+From 6b91ab848b86aa7968bb421f2f3f30b1c8ad6ba2 Mon Sep 17 00:00:00 2001
+From: Olivier Fourdan <ofourdan@redhat.com>
+Date: Mon, 10 Dec 2018 17:05:53 +0100
+Subject: [PATCH] a11y: Check X11 display at runtime
+
+`gtk_widget_accessible_grab_focus()` code checks that X11 isenabled at
+build time and uses X11 specific functions such as
+`gdk_x11_get_server_time()` regardless of the actual backend being used.
+
+Check that we are using an X11 display when X11 is backend enabled, so
+we do not crash when running on Wayland
+
+Closes: https://gitlab.gnome.org/GNOME/gtk/issues/1507
+---
+ gtk/a11y/gtkwidgetaccessible.c | 9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
+
+diff --git a/gtk/a11y/gtkwidgetaccessible.c b/gtk/a11y/gtkwidgetaccessible.c
+index 2154e88239..b1b866c39c 100644
+--- a/gtk/a11y/gtkwidgetaccessible.c
++++ b/gtk/a11y/gtkwidgetaccessible.c
+@@ -648,11 +648,12 @@ gtk_widget_accessible_grab_focus (AtkComponent *component)
+   if (gtk_widget_is_toplevel (toplevel))
+     {
+ #ifdef GDK_WINDOWING_X11
+-      gtk_window_present_with_time (GTK_WINDOW (toplevel),
+-      gdk_x11_get_server_time (gtk_widget_get_window (widget)));
+-#else
+-      gtk_window_present (GTK_WINDOW (toplevel));
++      if (GDK_IS_X11_DISPLAY (gtk_widget_get_display (toplevel)))
++        gtk_window_present_with_time (GTK_WINDOW (toplevel),
++                                      gdk_x11_get_server_time (gtk_widget_get_window (widget)));
++      else
+ #endif
++        gtk_window_present (GTK_WINDOW (toplevel));
+     }
+   return TRUE;
+ }
+-- 
+2.19.2
+

@@ -1,0 +1,79 @@
+From 044383fe4533c59a0bbd58c977ed2ba5fb5862b8 Mon Sep 17 00:00:00 2001
+From: Matthias Clasen <mclasen@redhat.com>
+Date: Fri, 31 May 2019 11:46:19 -0400
+Subject: [PATCH 1/2] Add a gtk-overlay-scrolling setting
+
+This is in preparation for letting user opt out of
+overlay scrolling in the control-center.
+---
+ gdk/wayland/gdkscreen-wayland.c |  2 +-
+ gdk/x11/gdksettings.c           |  1 +
+ gtk/gtksettings.c               | 21 ++++++++++++++++++++-
+ 3 files changed, 22 insertions(+), 2 deletions(-)
+
+diff --git a/gdk/wayland/gdkscreen-wayland.c b/gdk/wayland/gdkscreen-wayland.c
+index 6aff3a5a1a..5e156072f2 100644
+--- a/gdk/wayland/gdkscreen-wayland.c
++++ b/gdk/wayland/gdkscreen-wayland.c
+@@ -502,6 +502,7 @@ static TranslationEntry translations[] = {
+   { FALSE, "org.gnome.desktop.interface", "gtk-im-module", "gtk-im-module", G_TYPE_STRING, { .s = "simple" } },
+   { FALSE, "org.gnome.desktop.interface", "enable-animations", "gtk-enable-animations", G_TYPE_BOOLEAN, { .b = TRUE } },
+   { FALSE, "org.gnome.desktop.interface", "gtk-enable-primary-paste", "gtk-enable-primary-paste", G_TYPE_BOOLEAN, { .b = TRUE } },
++  { FALSE, "org.gnome.desktop.interface", "overlay-scrolling", "gtk-overlay-scrolling", G_TYPE_BOOLEAN, { .b = TRUE } },
+   { FALSE, "org.gnome.settings-daemon.peripherals.mouse", "double-click", "gtk-double-click-time", G_TYPE_INT, { .i = 400 } },
+   { FALSE, "org.gnome.settings-daemon.peripherals.mouse", "drag-threshold", "gtk-dnd-drag-threshold", G_TYPE_INT, {.i = 8 } },
+   { FALSE, "org.gnome.desktop.sound", "theme-name", "gtk-sound-theme-name", G_TYPE_STRING, { .s = "freedesktop" } },
+diff --git a/gdk/x11/gdksettings.c b/gdk/x11/gdksettings.c
+index f8bb6d896b..869c239b18 100644
+--- a/gdk/x11/gdksettings.c
++++ b/gdk/x11/gdksettings.c
+@@ -69,6 +69,7 @@ static const struct {
+   {"Gtk/RecentFilesMaxAge",   "gtk-recent-files-max-age"},
+   {"Gtk/RecentFilesEnabled",  "gtk-recent-files-enabled"},
+   {"Gtk/KeynavUseCaret",      "gtk-keynav-use-caret"},
++  {"Gtk/OverlayScrolling",    "gtk-overlay-scrolling"},
+ 
+   /* These are here in order to be recognized, but are not sent to
+      gtk as they are handled internally by gdk: */
+diff --git a/gtk/gtksettings.c b/gtk/gtksettings.c
+index 571ae11cd4..b83d9d5561 100644
+--- a/gtk/gtksettings.c
++++ b/gtk/gtksettings.c
+@@ -224,7 +224,8 @@ enum {
+   PROP_ENABLE_PRIMARY_PASTE,
+   PROP_RECENT_FILES_ENABLED,
+   PROP_LONG_PRESS_TIME,
+-  PROP_KEYNAV_USE_CARET
++  PROP_KEYNAV_USE_CARET,
++  PROP_OVERLAY_SCROLLING
+ };
+ 
+ /* --- prototypes --- */
+@@ -1767,6 +1768,24 @@ gtk_settings_class_init (GtkSettingsClass *class)
+                                                                    GTK_PARAM_READWRITE),
+                                              NULL);
+   g_assert (result == PROP_KEYNAV_USE_CARET);
++
++  /**
++   * GtkSettings:gtk-overlay-scrolling:
++   *
++   * Whether scrolled windows may use overlayed scrolling indicators.
++   * If this is set to %FALSE, scrolled windows will have permanent
++   * scrollbars.
++   *
++   * Since: 3.24.9
++   */
++  result = settings_install_property_parser (class,
++                                             g_param_spec_boolean ("gtk-overlay-scrolling",
++                                                                   P_("Whether to use overlay scrollbars"),
++                                                                   P_("Whether to use overlay scrollbars"),
++                                                                   TRUE,
++                                                                   GTK_PARAM_READWRITE),
++                                             NULL);
++  g_assert (result == PROP_OVERLAY_SCROLLING);
+ }
+ 
+ static void
+-- 
+2.23.0
+

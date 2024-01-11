@@ -1,0 +1,72 @@
+diff --git a/gtk/gtkscrolledwindow.c b/gtk/gtkscrolledwindow.c
+index 19090772201388c31bffba9f56db0e6e707f6093..a931d2bad5094aec76fc91c57792034357ed94d1 100644
+--- a/gtk/gtkscrolledwindow.c
++++ b/gtk/gtkscrolledwindow.c
+@@ -1900,10 +1900,19 @@ gtk_scrolled_window_measure (GtkCssGadget   *gadget,
+    */
+   if (policy_may_be_visible (priv->hscrollbar_policy))
+     {
+-      minimum_req.width = MAX (minimum_req.width, hscrollbar_requisition.width + sborder.left + sborder.right);
+-      natural_req.width = MAX (natural_req.width, hscrollbar_requisition.width + sborder.left + sborder.right);
++      int vscrollbar_extra_size;
+ 
+-      if (!priv->use_indicators && priv->hscrollbar_policy == GTK_POLICY_ALWAYS)
++      if (!priv->use_indicators && policy_may_be_visible (priv->vscrollbar_policy))
++        vscrollbar_extra_size = vscrollbar_requisition.width;
++      else
++        vscrollbar_extra_size = 0;
++
++      minimum_req.width = MAX (minimum_req.width,
++                               hscrollbar_requisition.width + sborder.left + sborder.right + vscrollbar_extra_size);
++      natural_req.width = MAX (natural_req.width,
++                               hscrollbar_requisition.width + sborder.left + sborder.right + vscrollbar_extra_size);
++
++      if (!priv->use_indicators)
+ 	{
+ 	  minimum_req.height += scrollbar_spacing + hscrollbar_requisition.height;
+ 	  natural_req.height += scrollbar_spacing + hscrollbar_requisition.height;
+@@ -1912,10 +1921,19 @@ gtk_scrolled_window_measure (GtkCssGadget   *gadget,
+ 
+   if (policy_may_be_visible (priv->vscrollbar_policy))
+     {
+-      minimum_req.height = MAX (minimum_req.height, vscrollbar_requisition.height + sborder.top + sborder.bottom);
+-      natural_req.height = MAX (natural_req.height, vscrollbar_requisition.height + sborder.top + sborder.bottom);
++      int hscrollbar_extra_size;
++
++      if (!priv->use_indicators && policy_may_be_visible (priv->hscrollbar_policy))
++        hscrollbar_extra_size = hscrollbar_requisition.height;
++      else
++        hscrollbar_extra_size = 0;
++
++      minimum_req.height = MAX (minimum_req.height,
++                                vscrollbar_requisition.height + sborder.top + sborder.bottom + hscrollbar_extra_size);
++      natural_req.height = MAX (natural_req.height,
++                                vscrollbar_requisition.height + sborder.top + sborder.bottom + hscrollbar_extra_size);
+ 
+-      if (!priv->use_indicators && priv->vscrollbar_policy == GTK_POLICY_ALWAYS)
++      if (!priv->use_indicators)
+ 	{
+ 	  minimum_req.width += scrollbar_spacing + vscrollbar_requisition.width;
+ 	  natural_req.width += scrollbar_spacing + vscrollbar_requisition.width;
+diff --git a/testsuite/gtk/scrolledwindow.c b/testsuite/gtk/scrolledwindow.c
+index c6093d8256e52071e00885d266d92b5bb7e664f7..e141fe35baa628592114e6cceebe8863b7b078dd 100644
+--- a/testsuite/gtk/scrolledwindow.c
++++ b/testsuite/gtk/scrolledwindow.c
+@@ -58,7 +58,7 @@ test_size (gboolean       overlay,
+       /* If the relevant scrollbar is non-overlay and always shown, it is added
+        * to the preferred size. When comparing to the expected size, we need to
+        * to exclude that extra, as we are only interested in the content size */
+-      if (!overlay && policy == GTK_POLICY_ALWAYS)
++      if (!overlay)
+         {
+           GtkWidget *scrollbar = gtk_scrolled_window_get_vscrollbar (GTK_SCROLLED_WINDOW (scrolledwindow));
+           gtk_widget_get_preferred_width (scrollbar, &scrollbar_size, NULL);
+@@ -87,7 +87,7 @@ test_size (gboolean       overlay,
+           gtk_widget_get_preferred_height (box, &child_size, NULL);
+         }
+ 
+-      if (!overlay && policy == GTK_POLICY_ALWAYS)
++      if (!overlay)
+         {
+           GtkWidget *scrollbar = gtk_scrolled_window_get_hscrollbar (GTK_SCROLLED_WINDOW (scrolledwindow));
+           gtk_widget_get_preferred_height (scrollbar, &scrollbar_size, NULL);

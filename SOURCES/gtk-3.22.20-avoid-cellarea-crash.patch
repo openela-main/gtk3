@@ -1,0 +1,40 @@
+From 4ba89f25b8a88616afc1915bdb4fb87d13efae6f Mon Sep 17 00:00:00 2001
+From: Benjamin Otte <otte@redhat.com>
+Date: Tue, 15 Jun 2021 19:34:37 +0200
+Subject: [PATCH] cellarea: Don't shrink area too much
+
+Do not compute rectangles with negative width/height. This avoids
+assertion failures further down when those rectangles were actually
+checked.
+
+https://bugzilla.redhat.com/show_bug.cgi?id=1962215
+---
+ gtk/gtkcellarea.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
+
+diff --git a/gtk/gtkcellarea.c b/gtk/gtkcellarea.c
+index 575e1c7fde..d1b3b1a279 100644
+--- a/gtk/gtkcellarea.c
++++ b/gtk/gtkcellarea.c
+@@ -3563,8 +3563,18 @@ gtk_cell_area_inner_cell_area (GtkCellArea        *area,
+ 
+   *inner_area = *cell_area;
+ 
++  if (border.left + border.right > cell_area->width)
++    {
++      border.left = cell_area->width / 2;
++      border.right = (cell_area->width + 1) / 2;
++    }
+   inner_area->x += border.left;
+   inner_area->width -= border.left + border.right;
++  if (border.top + border.bottom > cell_area->height)
++    {
++      border.top = cell_area->height / 2;
++      border.bottom = (cell_area->height + 1) / 2;
++    }
+   inner_area->y += border.top;
+   inner_area->height -= border.top + border.bottom;
+ }
+-- 
+GitLab
+

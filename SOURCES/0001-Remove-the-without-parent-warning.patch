@@ -1,0 +1,29 @@
+From abcc4773173ed8becb822971edad3f8d14a7a482 Mon Sep 17 00:00:00 2001
+From: Matthias Clasen <mclasen@redhat.com>
+Date: Mon, 21 May 2018 17:15:41 -0400
+Subject: [PATCH] Remove the "without parent" warning
+
+We've had it for a long time, and it hasn't really made
+a difference. And I don't think we are prepared to turn
+this into a hard error. So just drop it.
+---
+ gtk/gtkdialog.c | 3 ---
+ 1 file changed, 3 deletions(-)
+
+diff --git a/gtk/gtkdialog.c b/gtk/gtkdialog.c
+index 273c370935..0ef0f08b24 100644
+--- a/gtk/gtkdialog.c
++++ b/gtk/gtkdialog.c
+@@ -776,9 +776,6 @@ gtk_dialog_map (GtkWidget *widget)
+   GtkWindow *window = GTK_WINDOW (widget);
+   GtkDialog *dialog = GTK_DIALOG (widget);
+ 
+-  if (gtk_window_get_transient_for (window) == NULL)
+-    g_message ("GtkDialog mapped without a transient parent. This is discouraged.");
+-
+   GTK_WIDGET_CLASS (gtk_dialog_parent_class)->map (widget);
+ 
+   focus = gtk_window_get_focus (window);
+-- 
+2.37.0
+

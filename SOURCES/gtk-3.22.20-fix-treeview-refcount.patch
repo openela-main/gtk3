@@ -1,0 +1,91 @@
+From d4f62b44d47e3dddfb57add4f1f76cab0297584d Mon Sep 17 00:00:00 2001
+From: Matthias Clasen <mclasen@redhat.com>
+Date: Fri, 11 Jun 2021 08:53:46 -0400
+Subject: [PATCH 1/2] a11y: Fix ref counting in tree views
+
+GtkContainerCellAccessible wasn't unsetting accessible
+parents. Fix that.
+
+By itself, this doesn't help for freeing a memory leak,
+since AtkObject keeps a ref on its parent, so we never
+free the GtkContainerCellAccessible as long as it has children.
+---
+ gtk/a11y/gtkcontainercellaccessible.c | 10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
+
+diff --git a/gtk/a11y/gtkcontainercellaccessible.c b/gtk/a11y/gtkcontainercellaccessible.c
+index a756e3cadf..a40446fb47 100644
+--- a/gtk/a11y/gtkcontainercellaccessible.c
++++ b/gtk/a11y/gtkcontainercellaccessible.c
+@@ -30,12 +30,19 @@ struct _GtkContainerCellAccessiblePrivate
+ G_DEFINE_TYPE_WITH_PRIVATE (GtkContainerCellAccessible, gtk_container_cell_accessible, GTK_TYPE_CELL_ACCESSIBLE)
+ 
+ 
++static void
++unset_child (gpointer child)
++{
++  atk_object_set_parent (ATK_OBJECT (child), NULL);
++  g_object_unref (child);
++}
++
+ static void
+ gtk_container_cell_accessible_finalize (GObject *obj)
+ {
+   GtkContainerCellAccessible *container = GTK_CONTAINER_CELL_ACCESSIBLE (obj);
+ 
+-  g_list_free_full (container->priv->children, g_object_unref);
++  g_list_free_full (container->priv->children, unset_child);
+ 
+   G_OBJECT_CLASS (gtk_container_cell_accessible_parent_class)->finalize (obj);
+ }
+@@ -157,6 +164,7 @@ gtk_container_cell_accessible_remove_child (GtkContainerCellAccessible *containe
+   g_return_if_fail (GTK_IS_CELL_ACCESSIBLE (child));
+   g_return_if_fail (container->priv->n_children > 0);
+ 
++  atk_object_set_parent (ATK_OBJECT (child), NULL);
+   container->priv->children = g_list_remove (container->priv->children, child);
+   container->priv->n_children--;
+ 
+-- 
+GitLab
+
+
+From 21f8098261486417db371b202bc0494c12017468 Mon Sep 17 00:00:00 2001
+From: Matthias Clasen <mclasen@redhat.com>
+Date: Fri, 11 Jun 2021 08:55:48 -0400
+Subject: [PATCH 2/2] a11y: Plug a memory leak with treeviews
+
+We need to explicitly remove the children from
+a GtkContainerCellAccessible, since they otherwise
+keep the parent alive.
+
+Fixes: #3981
+---
+ gtk/a11y/gtktreeviewaccessible.c | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
+
+diff --git a/gtk/a11y/gtktreeviewaccessible.c b/gtk/a11y/gtktreeviewaccessible.c
+index adad462064..c1a2097a1e 100644
+--- a/gtk/a11y/gtktreeviewaccessible.c
++++ b/gtk/a11y/gtktreeviewaccessible.c
+@@ -104,6 +104,17 @@ static void
+ cell_info_free (GtkTreeViewAccessibleCellInfo *cell_info)
+ {
+   gtk_accessible_set_widget (GTK_ACCESSIBLE (cell_info->cell), NULL);
++  if (GTK_IS_CONTAINER_CELL_ACCESSIBLE (cell_info->cell))
++    {
++      GList *children;
++
++      while ((children = gtk_container_cell_accessible_get_children (GTK_CONTAINER_CELL_ACCESSIBLE (cell_info->cell))) != NULL)
++        {
++          GtkCellAccessible *child = children->data;
++          gtk_container_cell_accessible_remove_child (GTK_CONTAINER_CELL_ACCESSIBLE (cell_info->cell), child);
++        }
++    }
++
+   g_object_unref (cell_info->cell);
+ 
+   g_free (cell_info);
+-- 
+GitLab
+

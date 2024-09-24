@@ -1,0 +1,26 @@
+From a7a10aa63fa4e24d109b2e50f98c9616818f7e7a Mon Sep 17 00:00:00 2001
+From: Matthias Clasen <mclasen@redhat.com>
+Date: Wed, 21 Apr 2021 15:08:22 -0400
+Subject: [PATCH] iconbrowser: Don't use a nonexistent icon
+
+We don't have this icon, so don't put it in the
+desktop file, or tools will get upset.
+---
+ demos/icon-browser/gtk3-icon-browser.desktop | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/demos/icon-browser/gtk3-icon-browser.desktop b/demos/icon-browser/gtk3-icon-browser.desktop
+index c1a546e1d2..a7d6b4f0cb 100644
+--- a/demos/icon-browser/gtk3-icon-browser.desktop
++++ b/demos/icon-browser/gtk3-icon-browser.desktop
+@@ -2,7 +2,6 @@
+ Name=Icon Browser
+ Comment=An application that shows themed icons
+ Exec=gtk3-icon-browser
+-Icon=gtk3-icon-browser
+ Terminal=false
+ Type=Application
+ StartupNotify=true
+-- 
+GitLab
+

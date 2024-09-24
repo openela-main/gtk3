@@ -22,7 +22,7 @@
 
 Name: gtk3
 Version: 3.22.30
-Release: 11%{?dist}
+Release: 12%{?dist}
 Summary: GTK+ graphical user interface library
 
 License: LGPLv2+
@@ -55,6 +55,11 @@ Patch12: gtk-3.22.20-quiet-exit.patch
 Patch13: gtk-3.22.20-avoid-cellarea-crash.patch
 # https://bugzilla.redhat.com/show_bug.cgi?id=2058260
 Patch14: 0001-Remove-the-without-parent-warning.patch
+# Fix the rpminspect warning
+# https://gitlab.gnome.org/GNOME/gtk/-/commit/5e673e94de3f59e3b937ce14d22b8c07c6e975cd
+Patch15: gtk3-icon-browser-no-icon.patch
+# Fix loading modules from cwd
+Patch16: 0001-Stop-looking-for-modules-in-cwd.patch
 
 BuildRequires: pkgconfig(atk) >= %{atk_version}
 BuildRequires: pkgconfig(atk-bridge-2.0)
@@ -208,6 +213,8 @@ the functionality of the installed %{name} package.
 %patch12 -p1
 %patch13 -p1
 %patch14 -p1
+%patch15 -p1
+%patch16 -p1
 
 %build
 export CFLAGS='-fno-strict-aliasing %optflags'
@@ -366,6 +373,10 @@ gtk-query-immodules-3.0-%{__isa_bits} --update-cache &>/dev/null || :
 %{_datadir}/installed-tests
 
 %changelog
+* Wed Jul 10 2024 Matthias Clasen <mclasen@redhat.com> - 3.22.30-12
+- Stop loading modules from cwd (CVE-2024-6655)
+- Resolves: RHEL-46988
+
 * Mon Aug 22 2022 Carlos Garnacho <cgarnach@redhat.com> - 3.22.30-11
 - Drop warning about unparented dialogs (#2058260)
 

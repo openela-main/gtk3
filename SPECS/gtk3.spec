@@ -19,7 +19,7 @@
 
 Name: gtk3
 Version: 3.24.31
-Release: 2%{?dist}
+Release: 5%{?dist}
 Summary: GTK+ graphical user interface library
 
 License: LGPLv2+
@@ -35,6 +35,10 @@ Patch1:  gtk3-3.24.31-meson.patch
 Patch2:  gtk3-3.24.31-meson-reftest.patch
 # https://bugzilla.redhat.com/show_bug.cgi?id=2055013
 Patch3:  gtk3-3.24.31-treeview-a11y-leak-fix.patch
+# https://issues.redhat.com/browse/RHEL-22483
+Patch4:  0001-theme-Reduce-the-height-of-titlebars.patch
+# https://issues.redhat.com/browse/RHEL-46993
+Patch5: 0001-Stop-looking-for-modules-in-cwd.patch
 
 BuildRequires: pkgconfig(atk) >= %{atk_version}
 BuildRequires: pkgconfig(atk-bridge-2.0)
@@ -302,6 +306,16 @@ gtk-query-immodules-3.0-%{__isa_bits} --update-cache &>/dev/null || :
 %{_datadir}/installed-tests/
 
 %changelog
+* Wed Jul 10 2024 Matthias Clasen <mclasen@redhat.com> - 3.24.31-5
+- Stop looking for modules in cwd (CVE-2024-6655)
+- Resolves: RHEL-46993
+
+* Wed May 15 2024 Matthias Clasen <mclasen@redhat.com> - 3.24.31-4
+- Actually reduce the height of window titlebars
+
+* Thu May 02 2024 Matthias Clasen <mclasen@redhat.com> - 3.24.31-3
+- Reduce the height of window titlebars
+
 * Thu Feb 17 2022 David King <amigadave@amigadave.com> - 3.24.31-2
 - Fix treeview a11y refcount leak (#2055013)
 

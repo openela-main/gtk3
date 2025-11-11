@@ -19,7 +19,7 @@
 
 Name: gtk3
 Version: 3.24.31
-Release: 5%{?dist}
+Release: 8%{?dist}
 Summary: GTK+ graphical user interface library
 
 License: LGPLv2+
@@ -39,6 +39,14 @@ Patch3:  gtk3-3.24.31-treeview-a11y-leak-fix.patch
 Patch4:  0001-theme-Reduce-the-height-of-titlebars.patch
 # https://issues.redhat.com/browse/RHEL-46993
 Patch5: 0001-Stop-looking-for-modules-in-cwd.patch
+# https://issues.redhat.com/browse/RHEL-22853
+Patch6: 0001-dnd-Prevent-a-possible-segfault.patch
+# https://issues.redhat.com/browse/RHEL-4130
+Patch7: remove-size-allocation-critical.patch
+# https://issues.redhat.com/browse/RHEL-4098
+Patch8: 0001-Differentiate-keypad-keysyms-in-accelerators.patch
+Patch9: 0002-accellabel-Differentiate-keypad-better.patch
+Patch10: 0003-shortcutwindow-Differentiate-keypad-better.patch
 
 BuildRequires: pkgconfig(atk) >= %{atk_version}
 BuildRequires: pkgconfig(atk-bridge-2.0)
@@ -306,6 +314,18 @@ gtk-query-immodules-3.0-%{__isa_bits} --update-cache &>/dev/null || :
 %{_datadir}/installed-tests/
 
 %changelog
+* Tue Jul  2 2025 Matthias Clasen <mclasen@redhat.com> - 3.24.31-8
+- Resolves: RHEL-4098
+
+* Tue Jun 10 2025 Matthias Clasen <mclasen@redhat.com> - 3.24.31-7
+- Dummy commit to get ci to rerun
+- Related: RHEL-4098
+
+* Mon May 12 2025 Matthias Clasen <mclasen@redhat.com> - 3.24.31-6
+- Resolves: RHEL-4130
+- Resolves: RHEL-22853
+- Resolves: RHEL-4098
+
 * Wed Jul 10 2024 Matthias Clasen <mclasen@redhat.com> - 3.24.31-5
 - Stop looking for modules in cwd (CVE-2024-6655)
 - Resolves: RHEL-46993

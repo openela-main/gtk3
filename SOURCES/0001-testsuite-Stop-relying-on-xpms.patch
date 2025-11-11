@@ -1,0 +1,59 @@
+From fd803f19de47513057869d5e2853f805f2bf4ddc Mon Sep 17 00:00:00 2001
+From: Matthias Clasen <mclasen@redhat.com>
+Date: Fri, 28 Feb 2025 14:42:06 -0500
+Subject: [PATCH] testsuite: Stop relying on xpms
+
+gdk-pixbuf isn't loading those anymore, by default.
+---
+ testsuite/gtk/textbuffer.c | 28 +---------------------------
+ 1 file changed, 1 insertion(+), 27 deletions(-)
+
+diff --git a/testsuite/gtk/textbuffer.c b/testsuite/gtk/textbuffer.c
+index f7b2651c6b..1a9c079197 100644
+--- a/testsuite/gtk/textbuffer.c
++++ b/testsuite/gtk/textbuffer.c
+@@ -603,32 +603,6 @@ run_tests (GtkTextBuffer *buffer)
+   check_specific_tag (buffer, "end_tag");
+ }
+ 
+-
+-static const char  *book_closed_xpm[] = {
+-"16 16 6 1",
+-"       c None s None",
+-".      c black",
+-"X      c red",
+-"o      c yellow",
+-"O      c #808080",
+-"#      c white",
+-"                ",
+-"       ..       ",
+-"     ..XX.      ",
+-"   ..XXXXX.     ",
+-" ..XXXXXXXX.    ",
+-".ooXXXXXXXXX.   ",
+-"..ooXXXXXXXXX.  ",
+-".X.ooXXXXXXXXX. ",
+-".XX.ooXXXXXX..  ",
+-" .XX.ooXXX..#O  ",
+-"  .XX.oo..##OO. ",
+-"   .XX..##OO..  ",
+-"    .X.#OO..    ",
+-"     ..O..      ",
+-"      ..        ",
+-"                "};
+-
+ static void
+ fill_buffer (GtkTextBuffer *buffer)
+ {
+@@ -674,7 +648,7 @@ fill_buffer (GtkTextBuffer *buffer)
+                               "font", "-*-courier-bold-r-*-*-10-*-*-*-*-*-*-*",
+                               NULL);
+ 
+-  pixbuf = gdk_pixbuf_new_from_xpm_data (book_closed_xpm);
++  pixbuf = gdk_pixbuf_new_from_resource ("/org/gtk/libgtk/icons/16x16/actions/application-exit.png", NULL);
+ 
+   g_assert (pixbuf != NULL);
+ 
+-- 
+2.48.1
+

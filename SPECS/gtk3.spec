@@ -20,12 +20,16 @@
 
 Name:    gtk3
 Version: 3.24.43
-Release: 3%{?dist}
+Release: 4%{?dist}
 Summary: GTK+ graphical user interface library
 
 License: LGPL-2.0-or-later
 URL:     https://gtk.org
 Source0: https://download.gnome.org/sources/gtk+/3.24/gtk+-%{version}.tar.xz
+
+Patch: 0001-testsuite-Stop-relying-on-xpms.patch
+Patch: 0001-Avoid-criticals-on-headless-systems.patch
+Patch: gtk3-3.24.30-entry-no-emoji-context-menu.patch
 
 BuildRequires: pkgconfig(atk) >= %{atk_version}
 BuildRequires: pkgconfig(atk-bridge-2.0)
@@ -311,6 +315,14 @@ gtk-query-immodules-3.0-%{__isa_bits} --update-cache &>/dev/null || :
 %{_datadir}/installed-tests/
 
 %changelog
+* Mon Mar 10 2025 Matthias Clasen <mclasen@redhat.com> - 3.24.43-4
+- Stop relying on xpms in the testsuite
+  Resolves: RHEL-69453
+- Avoid criticals on headless systems
+  Resolves: RHEL-40884
+- Hide emoji chooser unless explicitly requested
+  Resolves: RHEL-65214
+
 * Tue Oct 29 2024 Troy Dawson <tdawson@redhat.com> - 3.24.43-3
 - Bump release for October 2024 mass rebuild:
   Resolves: RHEL-64018

@@ -20,7 +20,7 @@
 
 Name:    gtk3
 Version: 3.24.43
-Release: 4%{?dist}
+Release: 5%{?dist}
 Summary: GTK+ graphical user interface library
 
 License: LGPL-2.0-or-later
@@ -30,6 +30,7 @@ Source0: https://download.gnome.org/sources/gtk+/3.24/gtk+-%{version}.tar.xz
 Patch: 0001-testsuite-Stop-relying-on-xpms.patch
 Patch: 0001-Avoid-criticals-on-headless-systems.patch
 Patch: gtk3-3.24.30-entry-no-emoji-context-menu.patch
+Patch: 0001-gtkmenu-Await-more-motion-events-before-deactivating.patch
 
 BuildRequires: pkgconfig(atk) >= %{atk_version}
 BuildRequires: pkgconfig(atk-bridge-2.0)
@@ -315,6 +316,10 @@ gtk-query-immodules-3.0-%{__isa_bits} --update-cache &>/dev/null || :
 %{_datadir}/installed-tests/
 
 %changelog
+* Fri Nov 14 2025 Matthias Clasen <mclasen@redhat.com> - 3.24.43-5
+- Await more motion events before deactivating menus
+  Resolves: RHEL-47037
+
 * Mon Mar 10 2025 Matthias Clasen <mclasen@redhat.com> - 3.24.43-4
 - Stop relying on xpms in the testsuite
   Resolves: RHEL-69453

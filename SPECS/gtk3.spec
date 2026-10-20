@@ -22,7 +22,7 @@
 
 Name: gtk3
 Version: 3.22.30
-Release: 12%{?dist}
+Release: 13%{?dist}
 Summary: GTK+ graphical user interface library
 
 License: LGPLv2+
@@ -60,6 +60,10 @@ Patch14: 0001-Remove-the-without-parent-warning.patch
 Patch15: gtk3-icon-browser-no-icon.patch
 # Fix loading modules from cwd
 Patch16: 0001-Stop-looking-for-modules-in-cwd.patch
+# https://issues.redhat.com/browse/RHEL-224560
+# https://gitlab.gnome.org/GNOME/gtk/-/merge_requests/6660
+# https://gitlab.gnome.org/GNOME/gtk/-/merge_requests/6841
+Patch17: gtk3-3.22.30-RHEL-224560.patch
 
 BuildRequires: pkgconfig(atk) >= %{atk_version}
 BuildRequires: pkgconfig(atk-bridge-2.0)
@@ -215,6 +219,7 @@ the functionality of the installed %{name} package.
 %patch14 -p1
 %patch15 -p1
 %patch16 -p1
+%patch17 -p1
 
 %build
 export CFLAGS='-fno-strict-aliasing %optflags'
@@ -373,6 +378,11 @@ gtk-query-immodules-3.0-%{__isa_bits} --update-cache &>/dev/null || :
 %{_datadir}/installed-tests
 
 %changelog
+* Tue Sep 15 2026 RHEL Packaging Agent <redhat-ymir-agent@redhat.com> - 3.22.30-13
+- Fix DnD crashes in GtkSocket/GtkPlug and critical warning in
+  gtk_socket_advance_toplevel_focus()
+- Resolves: RHEL-224560
+
 * Wed Jul 10 2024 Matthias Clasen <mclasen@redhat.com> - 3.22.30-12
 - Stop loading modules from cwd (CVE-2024-6655)
 - Resolves: RHEL-46988

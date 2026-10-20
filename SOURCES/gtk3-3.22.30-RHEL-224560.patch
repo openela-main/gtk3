@@ -1,0 +1,112 @@
+From 367365a0b00a90cf8f7d4be8de831a868ab175db Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Ga=C3=ABl=20Bonithon?= <gael@xfce.org>
+Date: Sun, 10 Dec 2023 10:15:47 +0100
+Subject: [PATCH 1/3] gtkdnd: Add missing sanity check
+
+Can be NULL when the dnd takes place in the GtkSocket/GtkPlug framework.
+---
+ gtk/gtkdnd.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/gtk/gtkdnd.c b/gtk/gtkdnd.c
+index fca79b5..f0e415c 100644
+--- a/gtk/gtkdnd.c
++++ b/gtk/gtkdnd.c
+@@ -2761,7 +2761,7 @@ static void
+ gtk_drag_source_info_free (GtkDragSourceInfo *info)
+ {
+   gtk_drag_remove_icon (info);
+-  gtk_widget_destroy (info->icon_window);
++  g_clear_pointer (&info->icon_window, gtk_widget_destroy);
+   g_free (info);
+ }
+ 
+
+From 7ef74e458fb33cca7e131f144cfe8c61862b6de3 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Ga=C3=ABl=20Bonithon?= <gael@xfce.org>
+Date: Sun, 10 Dec 2023 10:17:00 +0100
+Subject: [PATCH 2/3] gtkdnd: Keep a reference on destination drag context
+
+If we don't keep a reference on it, it is released somewhere before
+gtk_drag_abort_timeout is called. This can cause a crash e.g. when the
+dnd takes place in the GtkSocket/GtkPlug framework.
+
+Fixes: #7128
+---
+ gtk/gtkdnd.c | 18 +++++++++++++++---
+ 1 file changed, 15 insertions(+), 3 deletions(-)
+
+diff --git a/gtk/gtkdnd.c b/gtk/gtkdnd.c
+index f0e415c..b04af98 100644
+--- a/gtk/gtkdnd.c
++++ b/gtk/gtkdnd.c
+@@ -2668,6 +2668,8 @@ gtk_drag_drop (GtkDragSourceInfo *info,
+     {
+       if (info->icon_window)
+         gtk_widget_hide (info->icon_window);
++      if (info->proxy_dest)
++        g_object_ref (info->proxy_dest->context);
+ 
+       gdk_drag_drop (info->context, time);
+       info->drop_timeout = gdk_threads_add_timeout (DROP_ABORT_TIME,
+@@ -2813,7 +2815,11 @@ gtk_drag_source_info_destroy (GtkDragSourceInfo *info)
+   gtk_target_list_unref (info->target_list);
+ 
+   if (info->drop_timeout)
+-    g_source_remove (info->drop_timeout);
++    {
++      g_source_remove (info->drop_timeout);
++      if (info->proxy_dest)
++        g_object_unref (info->proxy_dest->context);
++    }
+ 
+   if (info->update_idle)
+     g_source_remove (info->update_idle);
+@@ -3256,14 +3262,20 @@ static gboolean
+ gtk_drag_abort_timeout (gpointer data)
+ {
+   GtkDragSourceInfo *info = data;
++  GdkDragContext *context = NULL;
+   guint32 time = GDK_CURRENT_TIME;
+ 
+   if (info->proxy_dest)
+-    time = info->proxy_dest->proxy_drop_time;
++    {
++      time = info->proxy_dest->proxy_drop_time;
++      context = info->proxy_dest->context;
++    }
+ 
+   info->drop_timeout = 0;
+   gtk_drag_drop_finished (info, GTK_DRAG_RESULT_TIMEOUT_EXPIRED, time);
+-  
++
++  g_clear_object (&context);
++
+   return FALSE;
+ }
+ 
+
+From 1a0b1ca50b5671fa48d163c174432f67f750a02c Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Ga=C3=ABl=20Bonithon?= <gael@xfce.org>
+Date: Sat, 3 Feb 2024 22:33:57 +0100
+Subject: [PATCH 3/3] gtksocket: Fix wrong sanity check
+
+This avoids a critical warning from gtk_widget_get_parent() if
+focus_widget == NULL.
+---
+ gtk/gtksocket.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/gtk/gtksocket.c b/gtk/gtksocket.c
+index 03cbf02..9bdcada 100644
+--- a/gtk/gtksocket.c
++++ b/gtk/gtksocket.c
+@@ -1247,7 +1247,7 @@ gtk_socket_advance_toplevel_focus (GtkSocket        *socket,
+     }
+ 
+   focus_widget = gtk_window_get_focus (window);
+-  if (window)
++  if (focus_widget)
+     {
+       /* Wrapped off the end, clear the focus setting for the toplevel */
+       parent = gtk_widget_get_parent (focus_widget);

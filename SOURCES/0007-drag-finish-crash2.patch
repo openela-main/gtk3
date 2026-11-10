@@ -1,0 +1,12 @@
+diff -up gtk+-3.24.31/gtk/gtkdnd.c.orig gtk+-3.24.31/gtk/gtkdnd.c
+--- gtk+-3.24.31/gtk/gtkdnd.c.orig	2026-08-10 10:23:57.895270407 -0400
++++ gtk+-3.24.31/gtk/gtkdnd.c	2026-08-10 10:24:35.178049818 -0400
+@@ -2761,7 +2761,7 @@ static void
+ gtk_drag_source_info_free (GtkDragSourceInfo *info)
+ {
+   gtk_drag_remove_icon (info);
+-  gtk_widget_destroy (info->icon_window);
++  g_clear_pointer (&info->icon_window, gtk_widget_destroy);
+   g_free (info);
+ }
+ 

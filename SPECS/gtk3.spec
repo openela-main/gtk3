@@ -19,7 +19,7 @@
 
 Name: gtk3
 Version: 3.24.31
-Release: 9%{?dist}
+Release: 11%{?dist}
 Summary: GTK+ graphical user interface library
 
 License: LGPLv2+
@@ -47,8 +47,13 @@ Patch7: remove-size-allocation-critical.patch
 Patch8: 0001-Differentiate-keypad-keysyms-in-accelerators.patch
 Patch9: 0002-accellabel-Differentiate-keypad-better.patch
 Patch10: 0003-shortcutwindow-Differentiate-keypad-better.patch
-# https://issues.redhat.com/browse/RHEL-190440
 Patch11: 0001-gdk-wayland-Switch-behavior-of-BTN_STYLUS-STYLUS2-as.patch
+# https://redhat.atlassian.net/browse/RHEL-85085
+Patch12: 0004-menu-scrolling.patch
+# https://redhat.atlassian.net/browse/RHEL-151642
+Patch13: 0005-socket-sanity-check.patch
+Patch14: 0006-drag-finish-crash.patch
+Patch15: 0007-drag-finish-crash2.patch
 
 BuildRequires: pkgconfig(atk) >= %{atk_version}
 BuildRequires: pkgconfig(atk-bridge-2.0)
@@ -316,9 +321,16 @@ gtk-query-immodules-3.0-%{__isa_bits} --update-cache &>/dev/null || :
 %{_datadir}/installed-tests/
 
 %changelog
+* Mon Aug 10 2026 Matthias Clasen <mclasen@redhat.com> - 3.24.31-11
+- Resolves: RHEL-151642
+
+* Mon May  4 2026 Matthias Clasen <mclasen@redhat.com> - 3.24.31-10
+- Resolves: RHEL-85085
+- Resolves: RHEL-151642
+
 * Mon Apr 20 2026 Carlos Garnacho <cgarnach@redhat.com> - 3.24.31-9
 - Switch stylus button order to match compositor
-  Resolves: RHEL-190440
+  Resolves: RHEL-146566
 
 * Tue Jul  2 2025 Matthias Clasen <mclasen@redhat.com> - 3.24.31-8
 - Resolves: RHEL-4098

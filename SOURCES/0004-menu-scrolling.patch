@@ -1,0 +1,47 @@
+From ea162a26c3ce4f8ce2c2c11b12164bd4f71445ac Mon Sep 17 00:00:00 2001
+From: Matthias Clasen <mclasen@redhat.com>
+Date: Fri, 12 Dec 2025 12:21:44 -0500
+Subject: [PATCH] menu: Avoid scrolling too far
+
+gtk_menu_scroll_by tries to clamp the offset value to avoid
+scrolling too far (unless we are already 'too far').
+Unfortunately, the check for whether we are already too far
+isn't 100% fool-proof. For example, if the requested height
+shrinks, our existing scroll offset may suddenly be 'too far',
+and then we let the user scroll the menu content all the
+way off screen, which is confusing and disorienting.
+
+The fix in this commit was proposed by Simeon Andreev
+of the Eclipse team.
+
+See https://bugs.eclipse.org/bugs/show_bug.cgi?id=564910
+---
+ gtk/gtkmenu.c | 11 ++++++-----
+ 1 file changed, 6 insertions(+), 5 deletions(-)
+
+diff --git a/gtk/gtkmenu.c b/gtk/gtkmenu.c
+index 500194929b..09e1ee445d 100644
+--- a/gtk/gtkmenu.c
++++ b/gtk/gtkmenu.c
+@@ -4193,12 +4193,13 @@ gtk_menu_scroll_by (GtkMenu *menu,
+   /* Since arrows are shown, reduce view height even more */
+   view_height -= arrow_border.bottom;
+ 
+-  if ((priv->scroll_offset + view_height <= priv->requested_height) &&
+-      (offset + view_height > priv->requested_height))
+-    offset = priv->requested_height - view_height;
+-
+   if (offset != priv->scroll_offset)
+-    gtk_menu_scroll_to (menu, offset, GTK_MENU_SCROLL_FLAG_NONE);
++    {
++      offset = CLAMP (offset,
++                      MIN (priv->scroll_offset, 0),
++                      MAX (priv->scroll_offset, priv->requested_height - view_height));
++      gtk_menu_scroll_to (menu, offset, GTK_MENU_SCROLL_FLAG_NONE);
++    }
+ }
+ 
+ static gboolean
+-- 
+2.53.0
+
